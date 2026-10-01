@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SpotFlow — Central Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --emerald:#2ECC71;
+    --amber:#F1C40F;
+    --coral:#E74C3C;
+    --slate:#2C3E50;
+    --slate-soft:#3B5064;
+    --paper:#F7F9FA;
+    --line:rgba(44,62,80,.12);
+    --accent:var(--emerald);
+    --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--slate);
+    font-family:var(--font);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:28px 20px 56px}
+
+  header{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.01em;font-size:1.15rem}
+  .brand svg{display:block}
+  .venue{margin-left:auto;text-align:right;font-size:.85rem;color:var(--slate-soft);line-height:1.4}
+
+  /* hero: the live count is the loudest thing on the page */
+  .hero{
+    background:var(--slate);
+    color:#fff;
+    border-radius:20px;
+    padding:34px 32px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:28px;
+    align-items:center;
+  }
+  .status-word{
+    font-size:1.65rem;font-weight:600;margin:0 0 6px;
+    color:var(--accent);
+    transition:color .35s ease;
+  }
+  .count{
+    font-size:4.6rem;font-weight:700;line-height:.95;margin:0;
+    font-variant-numeric:tabular-nums;letter-spacing:-.03em;
+  }
+  .count .label{font-size:1.5rem;font-weight:500;opacity:.55}
+  .hero p.note{margin:12px 0 0;color:rgba(255,255,255,.7);font-size:.9rem;max-width:34ch}
+
+  /* traffic light */
+  .signal{
+    display:flex;flex-direction:column;gap:14px;
+    background:rgba(255,255,255,.07);
+    border-radius:999px;padding:18px 14px;
+  }
+  .lamp{
+    width:34px;height:34px;border-radius:50%;
+    background:rgba(255,255,255,.13);
+    transition:background .35s ease, box-shadow .35s ease;
+  }
+  .lamp.on.g{background:var(--emerald);box-shadow:0 0 0 6px rgba(46,204,113,.18)}
+  .lamp.on.y{background:var(--amber);box-shadow:0 0 0 6px rgba(241,196,15,.18)}
+  .lamp.on.r{background:var(--coral);box-shadow:0 0 0 6px rgba(231,76,60,.18)}
+
+  /* capacity bar */
+  .meter{margin-top:22px}
+  .meter .track{height:10px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}
+  .meter .fill{height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .6s cubic-bezier(.22,1,.36,1),background .35s ease}
+  .meter .marks{display:flex;justify-content:space-between;margin-top:8px;font-size:.75rem;color:rgba(255,255,255,.6)}
+
+  /* panels */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px}
+  .panel h2{margin:0 0 4px;font-size:1rem;font-weight:600}
+  .panel .sub{margin:0 0 18px;font-size:.82rem;color:var(--slate-soft)}
+
+  /* hourly trend */
+  .bars{display:flex;align-items:flex-end;gap:6px;height:118px}
+  .bar{flex:1;border-radius:6px 6px 3px 3px;background:var(--emerald);min-height:4px}
+  .bar.y{background:var(--amber)}
+  .bar.r{background:var(--coral)}
+  .bar.now{outline:2px solid var(--slate);outline-offset:2px}
+  .hours{display:flex;gap:6px;margin-top:8px;font-size:.68rem;color:var(--slate-soft)}
+  .hours span{flex:1;text-align:center}
+
+  /* forecast */
+  .forecast{font-size:.95rem;line-height:1.55;margin:0}
+  .forecast b{color:var(--coral)}
+  .tip{margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(46,204,113,.12);font-size:.88rem;line-height:1.5}
+
+  .foot{display:flex;flex-wrap:wrap;gap:16px;margin-top:22px;font-size:.78rem;color:var(--slate-soft)}
+  .foot .dot{width:7px;height:7px;border-radius:50%;background:var(--emerald);display:inline-block;margin-right:6px}
+
+  @media (max-width:720px){
+    .hero{grid-template-columns:1fr;text-align:left}
+    .signal{flex-direction:row;justify-content:flex-start;border-radius:999px;width:max-content}
+    .grid{grid-template-columns:1fr}
+    .count{font-size:3.6rem}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true">
+        <path d="M13 1C7.2 1 2.5 5.6 2.5 11.3 2.5 18.6 13 29 13 29s10.5-10.4 10.5-17.7C23.5 5.6 18.8 1 13 1z" fill="#2C3E50"/>
+        <circle cx="8.6" cy="10.4" r="2.1" fill="#2ECC71"/>
+        <circle cx="13" cy="9.2" r="2.4" fill="#F1C40F"/>
+        <circle cx="17.4" cy="10.4" r="2.1" fill="#E74C3C"/>
+        <path d="M6 15.6c.9-2 3.9-2 4.8 0M10.6 14.6c1-2.2 3.8-2.2 4.8 0M15.2 15.6c.9-2 3.9-2 4.8 0" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+      </svg>
+      SpotFlow
+    </div>
+    <div class="venue">
+      Central Library — 2nd floor<br>
+      Updated <span id="ago">just now</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <p class="status-word" id="statusWord">Low crowd</p>
+      <p class="count"><span id="count">0</span> <span class="label">of 60 seats taken</span></p>
+      <p class="note" id="advice">Plenty of room right now. Good time to head over.</p>
+
+      <div class="meter">
+        <div class="track"><div class="fill" id="fill"></div></div>
+        <div class="marks"><span>Empty</span><span>50%</span><span>85%</span><span>Full</span></div>
+      </div>
+    </div>
+
+    <div class="signal" role="img" aria-label="Crowd level indicator">
+      <div class="lamp g" id="lampG"></div>
+      <div class="lamp y" id="lampY"></div>
+      <div class="lamp r" id="lampR"></div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Today by the hour</h2>
+      <p class="sub">Average occupancy recorded at this entrance</p>
+      <div class="bars" id="bars"></div>
+      <div class="hours" id="hours"></div>
+    </div>
+
+    <div class="panel">
+      <h2>What to expect later</h2>
+      <p class="sub">Forecast from the last 14 days of traffic</p>
+      <p class="forecast">
+        Based on the last 14 days, expect <b>high crowd levels</b> today between
+        <b>4:00 PM and 6:00 PM</b>. Wednesdays peak roughly 20 minutes earlier
+        than the rest of the week.
+      </p>
+      <div class="tip">Visit before 3:00 PM for a quieter seat — occupancy usually stays under 40% until then.</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div><span class="dot"></span>Sensor node spotflow-lib-01 online</div>
+    <div>Encrypted with AES-128 over MQTT/TLS</div>
+    <div>Refreshes every 2 seconds</div>
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   Demo data source. Replace simulateReading() with a fetch/WebSocket
+   call to your backend, e.g.:
+
+     const r = await fetch('/api/venues/library-01/occupancy');
+     render(await r.json());   // { count, capacity, status }
+------------------------------------------------------------------- */
+const CAPACITY = 60;
+let count = 22;
+
+const el = id => document.getElementById(id);
+
+function statusFor(pct){
+  if (pct < 50)  return { key:'g', word:'Low crowd',    color:'var(--emerald)',
+                          advice:'Plenty of room right now. Good time to head over.' };
+  if (pct <= 85) return { key:'y', word:'Moderate',     color:'var(--amber)',
+                          advice:'Filling up. You will probably still find a seat.' };
+  return            { key:'r', word:'Very crowded', color:'var(--coral)',
+                          advice:'Near capacity. Consider coming back after 7:00 PM.' };
+}
+
+function render(count){
+  const pct = Math.round((count / CAPACITY) * 1000) / 10;
+  const s = statusFor(pct);
+
+  document.documentElement.style.setProperty('--accent', s.color);
+  el('count').textContent = count;
+  el('statusWord').textContent = s.word;
+  el('advice').textContent = s.advice;
+  el('fill').style.width = Math.min(pct, 100) + '%';
+
+  ['g','y','r'].forEach(k => {
+    el('lamp' + k.toUpperCase()).classList.toggle('on', k === s.key);
+  });
+}
+
+/* hourly history (demo values) */
+const hours = ['8','9','10','11','12','1','2','3','4','5','6','7'];
+const load  = [12, 24, 38, 46, 52, 44, 58, 66, 88, 92, 74, 40];
+const nowIdx = 6;
+
+el('bars').innerHTML = load.map((v,i) => {
+  const cls = v > 85 ? 'r' : v >= 50 ? 'y' : '';
+  return `<div class="bar ${cls} ${i===nowIdx?'now':''}" style="height:${v}%" title="${hours[i]}:00 — ${v}%"></div>`;
+}).join('');
+el('hours').innerHTML = hours.map(h => `<span>${h}</span>`).join('');
+
+/* live updates */
+function simulateReading(){
+  count = Math.max(0, Math.min(CAPACITY, count + Math.round((Math.random()-0.42)*4)));
+  render(count);
+  el('ago').textContent = 'just now';
+}
+render(count);
+setInterval(simulateReading, 2000);
+</script>
+</body>
+</html>
